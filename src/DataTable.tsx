@@ -2,9 +2,11 @@ import * as React from "react";
 import {
   DataGridPro,
   GridToolbarQuickFilter,
-  GridToolbar
+  GridToolbar,
+  GridColDef
 } from "@mui/x-data-grid-pro";
 import { createFakeServer } from "@mui/x-data-grid-generator";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 const SERVER_OPTIONS = {
   useCursorPagination: false
@@ -22,62 +24,42 @@ const CustomToolbar = () => (
   </>
 );
 
-export const ServerPaginationGrid = () => {
-  const [queryParams, setQueryParams] = React.useState({});
-  const [paginationModel, setPaginationModel] = React.useState({
-    page: 0,
-    pageSize: 10
-  });
-  const [filterModel, setFilterModel] = React.useState({
-    items: [],
-    quickFilterValues: []
-  });
-  const [sortModel, setSortModel] = React.useState([]);
+const dataColumns: GridColDef[] = [
+    {
+        field: 'type',
+        headerName: 'Model',
+        flex: 1 
+    },
+    {
+        field: 'desc',
+        headerName: 'Make',
+        flex: 1 
+    }
+]
 
-  React.useEffect(() => {
-    const newQueParams = {
-      ...paginationModel,
-      sortModel,
-      filterModel
-    };
-    console.log(newQueParams);
+interface ServerPaginationGridProps {
+    datapath: string
+}
 
-    setQueryParams((prevQueryParams) => ({
-      ...prevQueryParams,
-      ...newQueParams
-    }));
-  }, [filterModel, sortModel, paginationModel]);
+export const ServerPaginationGrid = ({ datapath }: ServerPaginationGridProps) => {
 
-  const { isLoading, rows, pageInfo } = useQuery(queryParams);
+    const { control } = useFormContext()
+    const { fields } = useFieldArray({
+        control,
+        name: datapath,
+        keyName: '_internalId'
+    })
 
-  // Some API clients return undefined while loading
-  // Following lines are here to prevent `rowCountState` from being undefined during the loading
-  const [rowCountState, setRowCountState] = React.useState(
-    pageInfo?.totalRowCount || 0
-  );
-  React.useEffect(() => {
-    setRowCountState((prevRowCountState) => {
-      if (pageInfo?.totalRowCount !== undefined) {
-        return pageInfo.totalRowCount;
-      }
-      return prevRowCountState;
-    });
-  }, [pageInfo?.totalRowCount, setRowCountState]);
+    const rows = fields.map((field: any, index) => ({
+        ...field['_attributes'],
+        id: index
+    }))
 
   return (
     <div style={{ height: 400, width: "100%" }}>
       <DataGridPro
         rows={rows}
-        {...data}
-        rowCount={rowCountState}
-        loading={isLoading}
-        pageSizeOptions={[10, 20, 50, 100]}
-        paginationModel={paginationModel}
-        sortModel={sortModel}
-        paginationMode="server"
-        pagination
-        sortingMode="server"
-        filterMode="server"
+        columns={dataColumns}
         slots={{ toolbar: CustomToolbar }}
       />
     </div>

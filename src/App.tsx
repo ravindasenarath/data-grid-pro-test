@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { ServerPaginationGrid } from './DataTable';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup'
 import { xml2js } from 'xml-js';
 import { merge } from 'lodash';
+
+const vehiclesPath = 'Root.0.Vehicles.0.Vehicle'
 
 const setNestedError = (path: string, errorMessage: string) => {
   const pathParts = path.split('.')
@@ -74,6 +76,10 @@ const App = () => {
 
   console.log('json', jsonXML)
 
+  useEffect(() => {
+    methods.reset(jsonXML)
+  }, [jsonXML])
+
   const methods = useForm<any>({
     resolver: customYupResolver(schema),
     mode: 'onChange'
@@ -81,7 +87,11 @@ const App = () => {
 
   return (
     <div className="App">
-      <ServerPaginationGrid/>
+      <FormProvider {...methods}>
+        <ServerPaginationGrid
+          datapath={vehiclesPath}
+        />
+      </FormProvider>
     </div>
   );
 }
