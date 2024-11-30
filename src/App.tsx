@@ -6,7 +6,21 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup'
 import { xml2js } from 'xml-js';
 
-
+const setNestedError = (path: string, errorMessage: string) => {
+  const pathParts = path.split('.')
+  return pathParts.reduceRight<Record<string, any>>((value, key) => {
+    const arrayMatch = key.match(/(\w+)\[(\d+)\]/)
+    if (arrayMatch) {
+      const [, arrayKey, index] = arrayMatch
+      return { [arrayKey]: Array(Number(index) + 1).fill(undefined).map((_, i) => i === Number(index) ? value : undefined) }
+    }
+    return { [key]: value }
+  }, {
+    message: errorMessage,
+    type: 'validation',
+    ref: {}
+  })
+}
 
 const schema = yup.object().shape({
   Root: yup.array().of(yup.object().shape({
@@ -18,12 +32,12 @@ const schema = yup.object().shape({
   }))
 })
 
-const customYupResolver = (schema: any) => {
-  return async(values: any, _context:any, options: any) => {
-    const names = { options }
+export const customYupResolver = (schema: any) => {
+  return async (values: any, _context: any, options: any) => {
+    const { names } = options
 
     try {
-      if(names && names.length > 0){
+      if (names && names.length > 0) {
         await schema.validateAt(names[0], values, { abortEarly: false, context: values })
       } else {
         await schema.validate(values, { abortEarly: false, context: values })
@@ -33,12 +47,19 @@ const customYupResolver = (schema: any) => {
         values,
         errors: {}
       }
-    }catch(error: any){
+    } catch (error: any) {
       let errors: Record<string, any> = {}
-      if(error.inner) {
+
+      if (error.inner) {
         error.inner.forEach((err: any) => {
-          const nestedError = 
+          const nestedError = setNestedError(err.path, err.message)
+          errors = merge(errors, nestedError)
         })
+      }
+
+      return {
+        values: {},
+        errors
       }
     }
   }
