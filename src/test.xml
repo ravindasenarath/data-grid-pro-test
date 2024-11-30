@@ -1,0 +1,8 @@
+<Root>
+    <Vehicles>
+        <Vehicle type="car" desc="Toyota"/>
+        <Vehicle type="bus" desc="Man"/>
+        <Vehicle type="Truck" desc="Ivenco"/>
+        <Vehicle type="car" desc="Mazda"/>
+    </Vehicles>
+</Root>
