@@ -5,6 +5,7 @@ import { ServerPaginationGrid } from './DataTable';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup'
 import { xml2js } from 'xml-js';
+import { merge } from 'lodash';
 
 const setNestedError = (path: string, errorMessage: string) => {
   const pathParts = path.split('.')
@@ -74,7 +75,7 @@ const App = () => {
   console.log('json', jsonXML)
 
   const methods = useForm<any>({
-    resolver: schema,
+    resolver: customYupResolver(schema),
     mode: 'onChange'
   })
 
